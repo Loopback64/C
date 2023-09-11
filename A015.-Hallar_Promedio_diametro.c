@@ -4,7 +4,6 @@ cuando el usuario responde con una ‘N’, mientras tanto, debe responder con �
 
 */
 
-
 #include <stdio.h>  // Incluimos la biblioteca estándar de entrada/salida.
 
 int main() {
