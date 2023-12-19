@@ -1,5 +1,8 @@
 #include <stdio.h>
-#include <conio.h>  // Solo para Windows, si estás en un sistema operativo diferente, puedes usar alternativas.
+#include <stdlib.h>
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
 
 void gotoxy(int x, int y) {
     printf("\033[%d;%dH", y, x);
@@ -17,16 +20,57 @@ void drawBullet(int x, int y) {
     printf("^");
 }
 
+int kbhit(void) {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+
+    return 0;
+}
+
+int getch() {
+    struct termios oldt, newt;
+    int ch;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+    return ch;
+}
+
 int main() {
     int shipX = 40, shipY = 20;
     int bulletX = -1, bulletY = -1;
     char input;
 
     while (1) {
-        system("cls");  // Solo para Windows, si estás en un sistema operativo diferente, puedes usar alternativas.
-        
-        if (_kbhit()) {
-            input = _getch();
+        system("clear");  // Limpiar pantalla en sistemas UNIX
+
+        if (kbhit()) {
+            input = getch();
 
             switch (input) {
                 case 'a':
@@ -53,7 +97,7 @@ int main() {
 
         drawShip(shipX, shipY);
 
-        Sleep(100);  // Solo para Windows, si estás en un sistema operativo diferente, puedes usar alternativas.
+        usleep(100000);  // Espera en microsegundos para controlar la velocidad de la animación
     }
 
     return 0;
